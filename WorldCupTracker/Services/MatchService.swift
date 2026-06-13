@@ -7,6 +7,8 @@ final class MatchService: ObservableObject {
     @Published private(set) var todayMatches: [Match] = []
     @Published private(set) var tomorrowMatches: [Match] = []
     @Published private(set) var isLoading = false
+    @Published private(set) var isRefreshing = false
+    @Published private(set) var lastRefreshTime: Date?
     @Published private(set) var errorMessage: String?
 
     @Published private(set) var teams: [String: Team] = [:]
@@ -63,6 +65,7 @@ final class MatchService: ObservableObject {
 
     func fetchMatches() async {
         isLoading = cachedMatches.isEmpty
+        isRefreshing = true
         errorMessage = nil
 
         do {
@@ -79,9 +82,12 @@ final class MatchService: ObservableObject {
             categorize(decoded.games)
 
             isLoading = false
+            isRefreshing = false
+            lastRefreshTime = Date()
         } catch {
             print("Match fetch error:", error)
             isLoading = false
+            isRefreshing = false
 
             if cachedMatches.isEmpty {
                 errorMessage = "Could not load matches."

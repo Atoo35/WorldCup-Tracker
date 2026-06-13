@@ -65,6 +65,13 @@ struct PopoverContentView: View {
     private var header: some View {
         Text("FIFA World Cup 2026")
             .font(.headline)
+            .opacity(matchService.isRefreshing ? 0.4 : 1.0)
+            .animation(
+                matchService.isRefreshing 
+                    ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true) 
+                    : .easeOut(duration: 0.3),
+                value: matchService.isRefreshing
+            )
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
     }
@@ -102,7 +109,12 @@ struct PopoverContentView: View {
                             .padding(.horizontal, 12)
                     }
 
-                    matchSection(title: "LIVE",     matches: matchService.liveMatches,     emptyText: "No live matches right now")
+                    matchSection(
+                        title: "LIVE",
+                        trailingText: matchService.isRefreshing ? "Updating..." : lastUpdatedText,
+                        matches: matchService.liveMatches,
+                        emptyText: "No live matches right now"
+                    )
                     matchSection(title: "TODAY",    matches: matchService.todayMatches,    emptyText: "No matches today")
                     matchSection(title: "TOMORROW", matches: matchService.tomorrowMatches, emptyText: "No matches tomorrow")
                 }
@@ -112,14 +124,33 @@ struct PopoverContentView: View {
         }
     }
 
+    // MARK: - Helpers
+
+    private var lastUpdatedText: String? {
+        guard let date = matchService.lastRefreshTime else { return nil }
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return "Updated \(formatter.string(from: date))"
+    }
+
     // MARK: - Section builder
 
-    private func matchSection(title: String, matches: [Match], emptyText: String) -> some View {
+    private func matchSection(title: String, trailingText: String? = nil, matches: [Match], emptyText: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 12)
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                
+                if let trailingText {
+                    Spacer()
+                    Text(trailingText)
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                        .animation(.easeInOut, value: trailingText)
+                }
+            }
+            .padding(.horizontal, 12)
 
             if matches.isEmpty {
                 Text(emptyText)

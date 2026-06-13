@@ -117,3 +117,10 @@ WorldCupTracker/
 Made with ⚽ and good vibes during FIFA World Cup 2026
 
 </div>
+
+---
+## Screenshots
+
+![alt text](./screenshots/image.png)
+
+![alt text](./screenshots/image-1.png)

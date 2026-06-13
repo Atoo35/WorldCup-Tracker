@@ -1,11 +1,3 @@
-//
-//  Team.swift
-//  WorldCupTracker
-//
-//  Created by Atharva Deshpande on 12/06/2026.
-//
-
-
 import Foundation
 
 struct Team: Decodable, Identifiable {

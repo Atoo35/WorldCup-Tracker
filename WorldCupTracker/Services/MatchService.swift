@@ -6,6 +6,7 @@ final class MatchService: ObservableObject {
     @Published private(set) var liveMatches: [Match] = []
     @Published private(set) var todayMatches: [Match] = []
     @Published private(set) var tomorrowMatches: [Match] = []
+    @Published private(set) var pastMatches: [Match] = []
     @Published private(set) var isLoading = false
     @Published private(set) var isRefreshing = false
     @Published private(set) var lastRefreshTime: Date?
@@ -119,5 +120,8 @@ final class MatchService: ObservableObject {
             return calendar.isDate(d, inSameDayAs: tomorrow)
         }
         .sorted { ($0.kickoffDate ?? .distantFuture) < ($1.kickoffDate ?? .distantFuture) }
+
+        pastMatches = matches.filter(\.isFinished)
+            .sorted { ($0.kickoffDate ?? .distantPast) > ($1.kickoffDate ?? .distantPast) }
     }
 }

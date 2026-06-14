@@ -7,6 +7,7 @@ struct PopoverContentView: View {
     // Drill-down state
     @State private var selectedMatch: Match? = nil
     @State private var showingDetail = false
+    @State private var showingPastMatches = false
 
     var body: some View {
         ZStack {
@@ -25,6 +26,37 @@ struct PopoverContentView: View {
                 footer
             }
             .frame(width: 360, height: 340)
+
+            // MARK: - Past Matches overlay (slides in from right)
+            if showingPastMatches {
+                VStack(alignment: .leading, spacing: 0) {
+                    PastMatchesView(
+                        matches: matchService.pastMatches,
+                        teams: matchService.teams,
+                        onBack: {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                                showingPastMatches = false
+                            }
+                        },
+                        onSelectMatch: { match in
+                            selectedMatch = match
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                                showingDetail = true
+                            }
+                        }
+                    )
+
+                    Divider()
+
+                    footer
+                }
+                .frame(width: 360, height: 340)
+                .background(.regularMaterial)
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal:   .move(edge: .trailing).combined(with: .opacity)
+                ))
+            }
 
             // MARK: - Detail overlay (slides in from right)
             if showingDetail, let match = selectedMatch {
@@ -63,17 +95,33 @@ struct PopoverContentView: View {
     // MARK: - Header
 
     private var header: some View {
-        Text("FIFA World Cup 2026")
-            .font(.headline)
-            .opacity(matchService.isRefreshing ? 0.4 : 1.0)
-            .animation(
-                matchService.isRefreshing 
-                    ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true) 
-                    : .easeOut(duration: 0.3),
-                value: matchService.isRefreshing
-            )
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+        HStack {
+            Text("FIFA World Cup 2026")
+                .font(.headline)
+                .opacity(matchService.isRefreshing ? 0.4 : 1.0)
+                .animation(
+                    matchService.isRefreshing 
+                        ? .easeInOut(duration: 0.8).repeatForever(autoreverses: true) 
+                        : .easeOut(duration: 0.3),
+                    value: matchService.isRefreshing
+                )
+            
+            Spacer()
+            
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                    showingPastMatches = true
+                }
+            } label: {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Past Matches")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
     }
 
     // MARK: - Content
@@ -191,5 +239,78 @@ struct PopoverContentView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+    }
+}
+
+// MARK: - PastMatchesView
+
+struct PastMatchesView: View {
+    let matches: [Match]
+    let teams: [String: Team]
+    let onBack: () -> Void
+    let onSelectMatch: (Match) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            HStack {
+                Button(action: onBack) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Back")
+                            .font(.callout)
+                    }
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Text("Past Matches")
+                    .font(.headline)
+
+                Spacer()
+                
+                // Balance back button width visually
+                Text("Back")
+                    .font(.callout)
+                    .opacity(0)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+
+            Divider()
+
+            // Content
+            if matches.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "sportscourt")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.tertiary)
+                    Text("No past matches yet")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(matches) { match in
+                            MatchRowView(
+                                match: match,
+                                teams: teams,
+                                onTap: {
+                                    onSelectMatch(match)
+                                }
+                            )
+                            .padding(.horizontal, 12)
+                        }
+                    }
+                    .padding(.vertical, 10)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 }

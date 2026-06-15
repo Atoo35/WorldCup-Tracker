@@ -13,8 +13,8 @@ struct Match: Decodable, Identifiable {
 
     let homeTeamName: String?
     let awayTeamName: String?
-    let homeScore: String
-    let awayScore: String
+    let homeScore: String?
+    let awayScore: String?
     let finished: String
     let timeElapsed: String
     let localDate: String
@@ -62,7 +62,7 @@ struct Match: Decodable, Identifiable {
     // MARK: - Display
 
     var displayScore: String {
-        isUpcoming ? "vs" : "\(homeScore) - \(awayScore)"
+        isUpcoming ? "vs" : "\(homeScore ?? "0") - \(awayScore ?? "0")"
     }
 
     var displayStatus: String {

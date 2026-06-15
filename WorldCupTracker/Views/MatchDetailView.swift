@@ -67,7 +67,7 @@ struct MatchDetailView: View {
                             .foregroundStyle(.secondary)
                             .frame(minWidth: 64)
                     } else {
-                        Text("\(match.homeScore)  –  \(match.awayScore)")
+                        Text("\(match.homeScore ?? "0")  –  \(match.awayScore ?? "0")")
                             .font(.system(size: 26, weight: .bold, design: .rounded))
                             .frame(minWidth: 64)
                     }

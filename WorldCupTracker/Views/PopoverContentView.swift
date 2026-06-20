@@ -11,10 +11,12 @@ struct PopoverContentView: View {
 
     // Tab state
     @State private var selectedTab: Tab = .matches
+    @State private var selectedGroup: String = "All"
 
     enum Tab: String, CaseIterable, Identifiable {
         case matches = "Matches"
         case upcoming = "Upcoming"
+        case standings = "Standings"
 
         var id: String { rawValue }
     }
@@ -152,42 +154,63 @@ struct PopoverContentView: View {
                   matchService.liveMatches.isEmpty,
                   matchService.todayMatches.isEmpty,
                   matchService.tomorrowMatches.isEmpty,
-                  matchService.upcomingMatches.isEmpty {
+                  matchService.upcomingMatches.isEmpty,
+                  matchService.groups.isEmpty {
             VStack(spacing: 12) {
                 Text(errorMessage)
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                 Button("Retry") {
-                    Task { await matchService.fetchMatches() }
+                    Task { 
+                        await matchService.fetchMatches() 
+                        await matchService.fetchGroups()
+                    }
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(24)
         } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    if let errorMessage = matchService.errorMessage {
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                            .padding(.horizontal, 12)
-                    }
+            if selectedTab == .standings {
+                VStack(alignment: .leading, spacing: 0) {
+                    GroupSelectorView(
+                        groups: groupNames,
+                        selectedGroup: $selectedGroup
+                    )
+                    .padding(.vertical, 4)
 
-                    if selectedTab == .matches {
-                        matchSection(
-                            title: "LIVE",
-                            trailingText: matchService.isRefreshing ? "Updating..." : lastUpdatedText,
-                            matches: matchService.liveMatches,
-                            emptyText: "No live matches right now"
-                        )
-                        matchSection(title: "TODAY",    matches: matchService.todayMatches,    emptyText: "No matches today")
-                        matchSection(title: "TOMORROW", matches: matchService.tomorrowMatches, emptyText: "No matches tomorrow")
-                    } else {
-                        upcomingMatchesContent
+                    Divider()
+
+                    ScrollView {
+                        standingsScrollContent
+                            .padding(.vertical, 10)
                     }
                 }
-                .padding(.vertical, 10)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        if let errorMessage = matchService.errorMessage {
+                            Text(errorMessage)
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                                .padding(.horizontal, 12)
+                        }
+
+                        if selectedTab == .matches {
+                            matchSection(
+                                title: "LIVE",
+                                trailingText: matchService.isRefreshing ? "Updating..." : lastUpdatedText,
+                                matches: matchService.liveMatches,
+                                emptyText: "No live matches right now"
+                            )
+                            matchSection(title: "TODAY",    matches: matchService.todayMatches,    emptyText: "No matches today")
+                            matchSection(title: "TOMORROW", matches: matchService.tomorrowMatches, emptyText: "No matches tomorrow")
+                        } else {
+                            upcomingMatchesContent
+                        }
+                    }
+                    .padding(.vertical, 10)
+                }
             }
         }
     }
@@ -224,6 +247,31 @@ struct PopoverContentView: View {
         .padding(.vertical, 8)
     }
 
+    private func groupedMatches(for group: String) -> [(String, [Match])] {
+        var groups: [String: [Match]] = [:]
+        var dateOrder: [String] = []
+
+        let matches = matchService.allMatches
+            .filter { $0.group == group }
+            .sorted {
+                ($0.kickoffDate ?? .distantFuture) <
+                ($1.kickoffDate ?? .distantFuture)
+            }
+
+        for match in matches {
+            let dateStr = match.kickoffLongDateString
+
+            if groups[dateStr] == nil {
+                dateOrder.append(dateStr)
+                groups[dateStr] = []
+            }
+
+            groups[dateStr]?.append(match)
+        }
+
+        return dateOrder.map { ($0, groups[$0] ?? []) }
+    }
+    
     private var groupedUpcomingMatches: [(String, [Match])] {
         var groups: [String: [Match]] = [:]
         var dateOrder: [String] = []
@@ -266,6 +314,81 @@ struct PopoverContentView: View {
     }
 
     // MARK: - Helpers
+
+    private var groupNames: [String] {
+        if matchService.groups.isEmpty {
+            return ["All", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
+        } else {
+            return ["All"] + matchService.groups.map(\.name).sorted()
+        }
+    }
+
+    @ViewBuilder
+    private var standingsScrollContent: some View {
+        if matchService.groups.isEmpty {
+            VStack(spacing: 8) {
+                ProgressView()
+                Text("Loading standings...")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.vertical, 40)
+        } else {
+            if selectedGroup == "All" {
+                ForEach(matchService.groups) { group in
+                    GroupTableView(group: group, teams: matchService.teams)
+                        .padding(.bottom, 12)
+                }
+            } else {
+                if let group = matchService.groups.first(where: { $0.name == selectedGroup }) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        GroupTableView(group: group, teams: matchService.teams)
+                        
+                        let groupedMatches = groupedMatches(for: selectedGroup)
+
+                        if !groupedMatches.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Group \(selectedGroup) Matches")
+                                    .font(.system(.caption, design: .rounded).weight(.bold))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 14)
+                                    .padding(.top, 4)
+
+                                ForEach(groupedMatches, id: \.0) { dateStr, matches in
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(dateStr)
+                                            .font(.system(.caption2, design: .rounded).weight(.semibold))
+                                            .foregroundStyle(.tertiary)
+                                            .padding(.horizontal, 14)
+
+                                        ForEach(matches) { match in
+                                            MatchRowView(
+                                                match: match,
+                                                teams: matchService.teams,
+                                                onTap: {
+                                                    selectedMatch = match
+                                                    withAnimation(
+                                                        .spring(
+                                                            response: 0.35,
+                                                            dampingFraction: 0.82
+                                                        )
+                                                    ) {
+                                                        showingDetail = true
+                                                    }
+                                                }
+                                            )
+                                            .padding(.horizontal, 12)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     private var lastUpdatedText: String? {
         guard let date = matchService.lastRefreshTime else { return nil }
@@ -405,5 +528,186 @@ struct PastMatchesView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+}
+
+// MARK: - Group Selector View
+
+struct GroupSelectorView: View {
+    let groups: [String]
+    @Binding var selectedGroup: String
+    @Namespace private var groupAnimation
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            ScrollViewReader { proxy in
+                HStack(spacing: 6) {
+                    ForEach(groups, id: \.self) { group in
+                        Text(group == "All" ? "All" : "Group \(group)")
+                            .font(.system(size: 11, weight: .bold))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .foregroundStyle(selectedGroup == group ? .white : .secondary)
+                            .background {
+                                if selectedGroup == group {
+                                    Capsule()
+                                        .fill(Color.accentColor)
+                                        .matchedGeometryEffect(id: "activeGroupTab", in: groupAnimation)
+                                } else {
+                                    Capsule()
+                                        .fill(Color.primary.opacity(0.04))
+                                }
+                            }
+                            .contentShape(Capsule())
+                            .onTapGesture {
+                                withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) {
+                                    selectedGroup = group
+                                }
+                            }
+                            .id(group)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .onGroupChange(of: selectedGroup) { newValue in
+                    withAnimation {
+                        proxy.scrollTo(newValue, anchor: .center)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Group Table View
+
+struct GroupTableView: View {
+    let group: Group
+    let teams: [String: Team]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Group Title
+            Text("GROUP \(group.name)")
+                .font(.system(.caption, design: .rounded).weight(.bold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 14)
+                .padding(.top, 4)
+
+            // Table Header Row
+            HStack(spacing: 8) {
+                Text("#")
+                    .frame(width: 20, alignment: .center)
+                Text("Team")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("P")
+                    .frame(width: 25, alignment: .center)
+                Text("GD")
+                    .frame(width: 30, alignment: .center)
+                Text("PTS")
+                    .frame(width: 30, alignment: .center)
+            }
+            .font(.system(.caption2, design: .rounded).weight(.bold))
+            .foregroundStyle(.tertiary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
+
+            // Table Rows
+            VStack(spacing: 0) {
+                ForEach(Array(group.teams.enumerated()), id: \.element.id) { index, groupTeam in
+                    let rank = index + 1
+                    let team = teams[groupTeam.team_id]
+                    
+                    HStack(spacing: 8) {
+                        // Rank
+                        Text("\(rank)")
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .foregroundStyle(rank <= 2 ? .primary : .secondary)
+                            .frame(width: 20, alignment: .center)
+                        
+                        // Flag & Name
+                        HStack(spacing: 6) {
+                            if let flagUrlStr = team?.flag, let flagUrl = URL(string: flagUrlStr) {
+                                AsyncImage(url: flagUrl) { image in
+                                    image.resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    Color.gray.opacity(0.15)
+                                }
+                                .frame(width: 18, height: 12)
+                                .clipShape(RoundedRectangle(cornerRadius: 1.5))
+                                .shadow(color: .black.opacity(0.1), radius: 1, y: 0.5)
+                            } else {
+                                RoundedRectangle(cornerRadius: 1.5)
+                                    .fill(Color.gray.opacity(0.15))
+                                    .frame(width: 18, height: 12)
+                            }
+                            
+                            Text(team?.name_en ?? "TBD")
+                                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        // Matches Played
+                        Text(groupTeam.mp)
+                            .font(.system(.subheadline, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 25, alignment: .center)
+
+                        // Goal Difference
+                        let gdValue = Int(groupTeam.gd) ?? 0
+                        let gdText = gdValue > 0 ? "+\(gdValue)" : "\(gdValue)"
+                        Text(gdText)
+                            .font(.system(.subheadline, design: .monospaced))
+                            .foregroundStyle(gdValue > 0 ? .green : (gdValue < 0 ? .red : .secondary))
+                            .frame(width: 30, alignment: .center)
+
+                        // Points
+                        Text(groupTeam.pts)
+                            .font(.system(.subheadline, design: .monospaced).weight(.bold))
+                            .foregroundStyle(.primary)
+                            .frame(width: 30, alignment: .center)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background {
+                        if rank <= 2 {
+                            // Subtly highlight the qualification rows
+                            Color.green.opacity(0.02)
+                        }
+                    }
+                    
+                    if index < group.teams.count - 1 {
+                        Divider()
+                            .padding(.leading, 42)
+                    }
+                }
+            }
+            .background(Color.primary.opacity(0.015))
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+            )
+            .padding(.horizontal, 12)
+        }
+    }
+}
+
+// MARK: - View Extensions
+
+extension View {
+    @ViewBuilder
+    func onGroupChange<V>(of value: V, perform action: @escaping (V) -> Void) -> some View where V: Equatable {
+        if #available(macOS 14.0, *) {
+            self.onChange(of: value) { _, newValue in
+                action(newValue)
+            }
+        } else {
+            self.onChange(of: value) { newValue in
+                action(newValue)
+            }
+        }
     }
 }

@@ -83,6 +83,11 @@ struct Match: Decodable, Identifiable {
         return Self.gmtFormatter.string(from: date)
     }
 
+    var kickoffLongDateString: String {
+        guard let date = kickoffDate else { return "Date TBD" }
+        return Self.longDateFormatter.string(from: date)
+    }
+
     // MARK: - Flags
 
     func homeFlagURL(teams: [String: Team]) -> URL? {
@@ -169,9 +174,9 @@ struct Match: Decodable, Identifiable {
     }
 
     private static let stadiumTimezones: [String: Int] = [
-        "14": -8, "16": -8, "13": -8,
-        "8": -5, "7": -5, "9": -5, "10": -5, "11": -5,
-        "3": -6, "1": -6, "2": -6, "5": -6, "4": -6
+        "13": -8, "14": -8, "15": -8, "16": -8,
+        "1": -6, "2": -6, "3": -6, "4": -6, "5": -6, "6": -6,
+        "7": -5, "8": -5, "9": -5, "10": -5, "11": -5, "12": -5
     ]
 
     private static func makeFormatter(timeZone: TimeZone) -> DateFormatter {
@@ -186,6 +191,13 @@ struct Match: Decodable, Identifiable {
         let f = DateFormatter()
         f.timeStyle = .short
         f.dateStyle = .none
+        f.timeZone = TimeZone(secondsFromGMT: 0)
+        return f
+    }()
+
+    private static let longDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEEE, MMMM d"
         f.timeZone = TimeZone(secondsFromGMT: 0)
         return f
     }()

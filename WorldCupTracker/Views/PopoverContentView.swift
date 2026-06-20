@@ -9,12 +9,28 @@ struct PopoverContentView: View {
     @State private var showingDetail = false
     @State private var showingPastMatches = false
 
+    // Tab state
+    @State private var selectedTab: Tab = .matches
+
+    enum Tab: String, CaseIterable, Identifiable {
+        case matches = "Matches"
+        case upcoming = "Upcoming"
+
+        var id: String { rawValue }
+    }
+
+    @Namespace private var tabAnimation
+
     var body: some View {
         ZStack {
 
             // MARK: - Main list
             VStack(alignment: .leading, spacing: 0) {
                 header
+
+                Divider()
+
+                segmentedControl
 
                 Divider()
 
@@ -25,7 +41,7 @@ struct PopoverContentView: View {
 
                 footer
             }
-            .frame(width: 360, height: 340)
+            .frame(width: 360, height: 380)
 
             // MARK: - Past Matches overlay (slides in from right)
             if showingPastMatches {
@@ -50,7 +66,7 @@ struct PopoverContentView: View {
 
                     footer
                 }
-                .frame(width: 360, height: 340)
+                .frame(width: 360, height: 380)
                 .background(.regularMaterial)
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -75,7 +91,7 @@ struct PopoverContentView: View {
 
                     footer
                 }
-                .frame(width: 360, height: 340)
+                .frame(width: 360, height: 380)
                 .background(.regularMaterial)
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -135,7 +151,8 @@ struct PopoverContentView: View {
         } else if let errorMessage = matchService.errorMessage,
                   matchService.liveMatches.isEmpty,
                   matchService.todayMatches.isEmpty,
-                  matchService.tomorrowMatches.isEmpty {
+                  matchService.tomorrowMatches.isEmpty,
+                  matchService.upcomingMatches.isEmpty {
             VStack(spacing: 12) {
                 Text(errorMessage)
                     .font(.callout)
@@ -157,18 +174,94 @@ struct PopoverContentView: View {
                             .padding(.horizontal, 12)
                     }
 
-                    matchSection(
-                        title: "LIVE",
-                        trailingText: matchService.isRefreshing ? "Updating..." : lastUpdatedText,
-                        matches: matchService.liveMatches,
-                        emptyText: "No live matches right now"
-                    )
-                    matchSection(title: "TODAY",    matches: matchService.todayMatches,    emptyText: "No matches today")
-                    matchSection(title: "TOMORROW", matches: matchService.tomorrowMatches, emptyText: "No matches tomorrow")
+                    if selectedTab == .matches {
+                        matchSection(
+                            title: "LIVE",
+                            trailingText: matchService.isRefreshing ? "Updating..." : lastUpdatedText,
+                            matches: matchService.liveMatches,
+                            emptyText: "No live matches right now"
+                        )
+                        matchSection(title: "TODAY",    matches: matchService.todayMatches,    emptyText: "No matches today")
+                        matchSection(title: "TOMORROW", matches: matchService.tomorrowMatches, emptyText: "No matches tomorrow")
+                    } else {
+                        upcomingMatchesContent
+                    }
                 }
                 .padding(.vertical, 10)
             }
-            .frame(maxHeight: 380)
+        }
+    }
+
+    // MARK: - Tabs and Upcoming Helpers
+
+    private var segmentedControl: some View {
+        HStack(spacing: 0) {
+            ForEach(Tab.allCases) { tab in
+                Text(tab.rawValue)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(selectedTab == tab ? .primary : .secondary)
+                    .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                            selectedTab = tab
+                        }
+                    }
+                    .background {
+                        if selectedTab == tab {
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(Color.primary.opacity(0.08))
+                                .matchedGeometryEffect(id: "activeTab", in: tabAnimation)
+                        }
+                    }
+            }
+        }
+        .padding(3)
+        .background(Color.primary.opacity(0.03))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
+    private var groupedUpcomingMatches: [(String, [Match])] {
+        var groups: [String: [Match]] = [:]
+        var dateOrder: [String] = []
+
+        for match in matchService.upcomingMatches {
+            let dateStr = match.kickoffLongDateString
+            if groups[dateStr] == nil {
+                dateOrder.append(dateStr)
+                groups[dateStr] = []
+            }
+            groups[dateStr]!.append(match)
+        }
+
+        return dateOrder.map { ($0, groups[$0]!) }
+    }
+
+    @ViewBuilder
+    private var upcomingMatchesContent: some View {
+        let groups = groupedUpcomingMatches
+        if groups.isEmpty {
+            VStack(spacing: 8) {
+                Image(systemName: "calendar.badge.clock")
+                    .font(.system(size: 28))
+                    .foregroundStyle(.tertiary)
+                Text("No upcoming matches")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 32)
+        } else {
+            ForEach(groups, id: \.0) { dateStr, matches in
+                matchSection(
+                    title: dateStr,
+                    matches: matches,
+                    emptyText: ""
+                )
+            }
         }
     }
 

@@ -37,17 +37,21 @@ final class MatchService: ObservableObject {
             await fetchMatches()
             await fetchGroups()
         }
+        startAutoRefresh()
     }
     
     func startAutoRefresh() {
-           stopAutoRefresh()
-           refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-               Task { @MainActor in
-                   await self?.fetchMatches()
-                   await self?.fetchGroups()
-               }
-           }
-       }
+        guard refreshTimer == nil else { return }
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                await self?.fetchMatches()
+                await self?.fetchGroups()
+            }
+        }
+        if let timer = refreshTimer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
+    }
    
     func stopAutoRefresh() {
        refreshTimer?.invalidate()

@@ -14,9 +14,11 @@
 		A10000010000000000000004 /* PopoverContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000004 /* PopoverContentView.swift */; };
 		A10000010000000000000005 /* MatchRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000005 /* MatchRowView.swift */; };
 		A10000010000000000000007 /* MatchDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000010 /* MatchDetailView.swift */; };
+		DB59664CA87B086E9C8D4808 /* CalendarSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB8BD04FB703466DFB0DF4C /* CalendarSyncService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2BB8BD04FB703466DFB0DF4C /* CalendarSyncService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CalendarSyncService.swift; sourceTree = "<group>"; };
 		5D714C382FDCC674004634CC /* Team.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Team.swift; sourceTree = "<group>"; };
 		A10000020000000000000001 /* WorldCupTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldCupTrackerApp.swift; sourceTree = "<group>"; };
 		A10000020000000000000002 /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Match.swift; sourceTree = "<group>"; };
@@ -82,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000020000000000000003 /* MatchService.swift */,
+				2BB8BD04FB703466DFB0DF4C /* CalendarSyncService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -171,6 +174,7 @@
 				A10000010000000000000004 /* PopoverContentView.swift in Sources */,
 				A10000010000000000000005 /* MatchRowView.swift in Sources */,
 				A10000010000000000000007 /* MatchDetailView.swift in Sources */,
+				DB59664CA87B086E9C8D4808 /* CalendarSyncService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

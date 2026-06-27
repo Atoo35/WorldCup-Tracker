@@ -3,6 +3,7 @@ import SwiftUI
 
 struct PopoverContentView: View {
     @EnvironmentObject private var matchService: MatchService
+    @EnvironmentObject private var calendarSyncService: CalendarSyncService
 
     // Drill-down state
     @State private var selectedMatch: Match? = nil
@@ -102,11 +103,10 @@ struct PopoverContentView: View {
             }
         }
         .onAppear {
-            matchService.startAutoRefresh()
-            Task { await matchService.fetchMatches() }
-        }
-        .onDisappear {
-            matchService.stopAutoRefresh()
+            // Fetch immediately if data is stale
+            if let lastRefresh = matchService.lastRefreshTime, Date().timeIntervalSince(lastRefresh) > 30 {
+                Task { await matchService.fetchMatches() }
+            }
         }
     }
 
@@ -445,6 +445,27 @@ struct PopoverContentView: View {
         HStack {
             Button("Refresh") {
                 Task { await matchService.fetchMatches() }
+            }
+            
+            if calendarSyncService.isSyncing {
+                ProgressView()
+                    .controlSize(.small)
+                    .padding(.leading, 8)
+            } else {
+                Button(calendarSyncService.syncSuccess ? "Synced!" : "Sync Calendar") {
+                    Task { await calendarSyncService.syncMatches(matchService.allMatches, teams: matchService.teams) }
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(calendarSyncService.syncSuccess ? .green : .accentColor)
+                .font(.callout)
+                .disabled(matchService.allMatches.isEmpty)
+                .padding(.leading, 8)
+                
+                if let error = calendarSyncService.syncError {
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundStyle(.red)
+                        .help(error)
+                }
             }
 
             Spacer()

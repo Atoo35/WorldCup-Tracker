@@ -3,11 +3,13 @@ import SwiftUI
 @main
 struct WorldCupTrackerApp: App {
     @StateObject private var matchService = MatchService()
+    @StateObject private var calendarSyncService = CalendarSyncService()
 
     var body: some Scene {
         MenuBarExtra {
             PopoverContentView()
                 .environmentObject(matchService)
+                .environmentObject(calendarSyncService)
         } label: {
             MenuBarLabel(liveCount: matchService.liveMatches.count)
         }

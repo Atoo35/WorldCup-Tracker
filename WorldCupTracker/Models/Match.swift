@@ -24,6 +24,9 @@ struct Match: Decodable, Identifiable {
     let homeScorers: String?
     let awayScorers: String?
 
+    let homeTeamLabel: String?
+    let awayTeamLabel: String?
+
     enum CodingKeys: String, CodingKey {
         case id
         case stadium_id
@@ -42,6 +45,9 @@ struct Match: Decodable, Identifiable {
 
         case homeScorers = "home_scorers"
         case awayScorers = "away_scorers"
+        
+        case homeTeamLabel = "home_team_label"
+        case awayTeamLabel = "away_team_label"
     }
 
     // MARK: - State

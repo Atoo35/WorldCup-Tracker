@@ -4,5 +4,11 @@
 <dict>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSCalendarsUsageDescription</key>
+	<string>We need access to your calendar to sync World Cup matches.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>We need full access to your calendar to sync World Cup matches and keep them updated.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>We need write access to your calendar to add World Cup matches.</string>
 </dict>
 </plist>

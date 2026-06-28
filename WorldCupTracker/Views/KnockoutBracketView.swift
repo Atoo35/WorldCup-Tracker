@@ -18,6 +18,8 @@ struct KnockoutBracketView: View {
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
 
+    @State private var didInitialScroll = false
+
     private let cardSize = CGSize(width: 180, height: 70)
     private let xSpacing: CGFloat = 260
 
@@ -29,17 +31,17 @@ struct KnockoutBracketView: View {
 
                 ZStack(alignment: .topLeading) {
 
-                    // ✅ ANCHOR TOP-LEFT
+                    // TOP-LEFT ANCHOR
                     Color.clear
                         .frame(width: 1, height: 1)
                         .id("TOP_LEFT")
 
-                    // MARK: - LINES
+                    // LINES
                     Canvas { context, _ in
                         drawLines(context: context)
                     }
 
-                    // MARK: - CARDS
+                    // MATCH CARDS
                     ForEach(cachedColumns.flatMap { $0 }) { node in
                         if let match = node.match,
                            let pos = cachedLayout[node.id] {
@@ -49,7 +51,7 @@ struct KnockoutBracketView: View {
                         }
                     }
 
-                    // MARK: - HEADERS
+                    // HEADERS
                     ForEach(Array(cachedColumns.enumerated()), id: \.offset) { index, _ in
 
                         Text(roundTitle(for: index))
@@ -76,19 +78,35 @@ struct KnockoutBracketView: View {
             .onAppear {
                 rebuildBracket()
 
-                // RESET CAMERA STATE
+                // RESET CAMERA
                 scale = 1.0
                 lastScale = 1.0
                 offset = .zero
                 lastOffset = .zero
 
-                // FORCE SCROLL TO TOP-LEFT ORIGIN
-                DispatchQueue.main.async {
-                    proxy.scrollTo("TOP_LEFT", anchor: .topLeading)
-                }
+                didInitialScroll = false
+            }
+            .onChange(of: cachedLayout) { _ in
+                performInitialScroll(proxy: proxy)
             }
             .onChange(of: matches.count) { _ in
+                didInitialScroll = false
                 rebuildBracket()
+            }
+        }
+    }
+
+    // MARK: - INITIAL SCROLL FIX
+
+    private func performInitialScroll(proxy: ScrollViewProxy) {
+        guard !didInitialScroll,
+              !cachedLayout.isEmpty else { return }
+
+        didInitialScroll = true
+
+        DispatchQueue.main.async {
+            withAnimation(.none) {
+                proxy.scrollTo("TOP_LEFT", anchor: .topLeading)
             }
         }
     }

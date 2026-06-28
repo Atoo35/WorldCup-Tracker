@@ -10,7 +10,6 @@ final class CalendarSyncService: ObservableObject {
     
     private let eventStore = EKEventStore()
     private let calendarName = "World Cup 2026"
-    
     var isAuthorized: Bool {
         let status = EKEventStore.authorizationStatus(for: .event)
         if #available(macOS 14.0, *) {
@@ -69,12 +68,14 @@ final class CalendarSyncService: ObservableObject {
                 if let group = match.group {
                     title += " (\(group.uppercased()))"
                 }
-                
+                let adjustedDate = kickoffDate.addingTimeInterval(-3600)
                 event.title = title
-                event.startDate = kickoffDate
+                event.startDate = adjustedDate
+                event.timeZone = nil
                 // Assume match takes about 2 hours
-                event.endDate = kickoffDate.addingTimeInterval(2 * 3600)
+                event.endDate = adjustedDate.addingTimeInterval(2 * 3600)
                 
+         
                 var notes = matchIdentifier
                 if let stadium = match.stadium_id {
                     notes += "\nStadium ID: \(stadium)"

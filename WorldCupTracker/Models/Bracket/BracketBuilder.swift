@@ -8,11 +8,25 @@ final class BracketBuilder {
             ($0.type ?? "").uppercased()
         }
 
-        let r32 = (grouped["R32"] ?? [])
-        let r16 = (grouped["R16"] ?? [])
-        let qf  = (grouped["QF"] ?? [])
-        let sf  = (grouped["SF"] ?? [])
-        let f   = (grouped["FINAL"] ?? grouped["F"] ?? [])
+        let r32 = (grouped["R32"] ?? []).sorted {
+            (Int($0.id) ?? 0) < (Int($1.id) ?? 0)
+        }
+
+        let r16 = (grouped["R16"] ?? []).sorted {
+            (Int($0.id) ?? 0) < (Int($1.id) ?? 0)
+        }
+
+        let qf = (grouped["QF"] ?? []).sorted {
+            (Int($0.id) ?? 0) < (Int($1.id) ?? 0)
+        }
+
+        let sf = (grouped["SF"] ?? []).sorted {
+            (Int($0.id) ?? 0) < (Int($1.id) ?? 0)
+        }
+
+        let f = (grouped["FINAL"] ?? grouped["F"] ?? []).sorted {
+            (Int($0.id) ?? 0) < (Int($1.id) ?? 0)
+        }
 
         let r32Nodes = r32.map(node)
 

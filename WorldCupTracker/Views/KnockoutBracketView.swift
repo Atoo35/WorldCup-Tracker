@@ -11,54 +11,119 @@ struct KnockoutBracketView: View {
     @State private var contentSize: CGSize = .zero
     @State private var originOffset: CGPoint = .zero
 
-    private let cardSize = CGSize(width: 150, height: 70)
+    // MARK: - ZOOM / PAN
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+
+    private let cardSize = CGSize(width: 180, height: 70)
     private let xSpacing: CGFloat = 260
 
     var body: some View {
 
-        ScrollView([.horizontal, .vertical]) {
+        ScrollViewReader { proxy in
 
-            ZStack(alignment: .topLeading) {
+            ScrollView([.horizontal, .vertical]) {
 
-                // MARK: - LINES
-                Canvas { context, _ in
-                    drawLines(context: context)
-                }
+                ZStack(alignment: .topLeading) {
 
-                // MARK: - CARDS
-                ForEach(cachedColumns.flatMap { $0 }) { node in
-                    if let match = node.match,
-                       let pos = cachedLayout[node.id] {
+                    // ✅ ANCHOR TOP-LEFT
+                    Color.clear
+                        .frame(width: 1, height: 1)
+                        .id("TOP_LEFT")
 
-                        BracketMatchCard(match: match, teams: teams)
-                            .position(offset(pos))
+                    // MARK: - LINES
+                    Canvas { context, _ in
+                        drawLines(context: context)
+                    }
+
+                    // MARK: - CARDS
+                    ForEach(cachedColumns.flatMap { $0 }) { node in
+                        if let match = node.match,
+                           let pos = cachedLayout[node.id] {
+
+                            BracketMatchCard(match: match, teams: teams)
+                                .position(offset(pos))
+                        }
+                    }
+
+                    // MARK: - HEADERS
+                    ForEach(Array(cachedColumns.enumerated()), id: \.offset) { index, _ in
+
+                        Text(roundTitle(for: index))
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .position(
+                                offset(
+                                    CGPoint(
+                                        x: CGFloat(index) * xSpacing,
+                                        y: -60
+                                    )
+                                )
+                            )
                     }
                 }
+                .frame(width: contentSize.width,
+                       height: contentSize.height,
+                       alignment: .topLeading)
 
-                // MARK: - ROUND HEADERS (FIXED - NO OFFSET SYSTEM)
-                ForEach(Array(cachedColumns.enumerated()), id: \.offset) { index, _ in
+                .scaleEffect(scale)
+                .offset(offset)
+                .gesture(combinedGesture)
+            }
+            .onAppear {
+                rebuildBracket()
 
-                    Text(roundTitle(for: index))
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.7))
-                        .position(
-                            x: CGFloat(index) * xSpacing + 75,
-                            y: -60
-                        )
+                // RESET CAMERA STATE
+                scale = 1.0
+                lastScale = 1.0
+                offset = .zero
+                lastOffset = .zero
+
+                // FORCE SCROLL TO TOP-LEFT ORIGIN
+                DispatchQueue.main.async {
+                    proxy.scrollTo("TOP_LEFT", anchor: .topLeading)
                 }
             }
-            .frame(width: contentSize.width,
-                   height: contentSize.height,
-                   alignment: .topLeading)
+            .onChange(of: matches.count) { _ in
+                rebuildBracket()
+            }
         }
-        .onAppear { rebuildBracket() }
-        .onChange(of: matches.count) { _ in rebuildBracket() }
+    }
+
+    // MARK: - GESTURES
+
+    private var combinedGesture: some Gesture {
+
+        SimultaneousGesture(
+            MagnificationGesture()
+                .onChanged { value in
+                    let delta = value / lastScale
+                    lastScale = value
+                    scale *= delta
+                }
+                .onEnded { _ in
+                    lastScale = 1.0
+                },
+
+            DragGesture()
+                .onChanged { value in
+                    offset = CGSize(
+                        width: lastOffset.width + value.translation.width,
+                        height: lastOffset.height + value.translation.height
+                    )
+                }
+                .onEnded { _ in
+                    lastOffset = offset
+                }
+        )
     }
 
     // MARK: - BUILD
 
     private func rebuildBracket() {
-
         let columns = BracketBuilder.buildTree(from: matches)
         let layout = BracketLayoutEngine().layout(columns: columns)
 
@@ -84,7 +149,7 @@ struct KnockoutBracketView: View {
         }
     }
 
-    // MARK: - LINES (FIXED EDGE DETECTION)
+    // MARK: - LINES
 
     private func drawLines(context: GraphicsContext) {
 
@@ -111,8 +176,6 @@ struct KnockoutBracketView: View {
         }
     }
 
-    // MARK: - CONNECTIONS (FIXED)
-
     private func drawConnection(
         context: GraphicsContext,
         from child: CGPoint,
@@ -121,7 +184,6 @@ struct KnockoutBracketView: View {
         var path = Path()
 
         let half = cardSize.width / 2
-
         let isLeftToRight = child.x < parent.x
 
         let startX = child.x + (isLeftToRight ? half : -half)

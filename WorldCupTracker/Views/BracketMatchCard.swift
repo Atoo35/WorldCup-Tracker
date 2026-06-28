@@ -10,13 +10,18 @@ struct BracketMatchCard: View {
         VStack(alignment: .leading, spacing: 6) {
 
             // MARK: - KICKOFF (TOP CENTER)
-            if let date = match.kickoffDate {
-                Text(formatKickoff(date))
-                    .font(.system(size: 9, weight: .regular))
+            VStack(spacing: 1) {
+                Text(match.kickoffLongDateString)
+                    .font(.system(size: 8, weight: .medium))
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
+
+                if let time = match.kickoffTimeString {
+                    Text(time)
+                        .font(.system(size: 9, weight: .regular))
+                        .foregroundStyle(.secondary)
+                }
             }
+            .frame(maxWidth: .infinity)
 
             // MARK: - TEAMS
             teamRow(
@@ -31,7 +36,7 @@ struct BracketMatchCard: View {
         }
         .font(.system(size: 10, weight: .medium, design: .rounded))
         .padding(8)
-        .frame(width: 150)
+        .frame(width: 180)
         .background(backgroundColor)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
@@ -105,14 +110,4 @@ struct BracketMatchCard: View {
         Color.primary.opacity(0.05)
     }
 
-    // MARK: - DATE FORMAT
-
-    private func formatKickoff(_ date: Date) -> String {
-
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_GB")
-        formatter.dateFormat = "d MMM • HH:mm"
-
-        return formatter.string(from: date)
-    }
 }

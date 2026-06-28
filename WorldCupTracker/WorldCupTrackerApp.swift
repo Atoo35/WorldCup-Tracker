@@ -4,6 +4,7 @@ import SwiftUI
 struct WorldCupTrackerApp: App {
     @StateObject private var matchService = MatchService()
     @StateObject private var calendarSyncService = CalendarSyncService()
+    @State private var syncScheduler: CalendarSyncScheduler?
 
     var body: some Scene {
         MenuBarExtra {
@@ -12,6 +13,14 @@ struct WorldCupTrackerApp: App {
                 .environmentObject(calendarSyncService)
         } label: {
             MenuBarLabel(liveCount: matchService.liveMatches.count)
+                .onAppear {
+                    if syncScheduler == nil {
+                        syncScheduler = CalendarSyncScheduler(
+                            matchService: matchService,
+                            calendarSyncService: calendarSyncService
+                        )
+                    }
+                }
         }
         .menuBarExtraStyle(.window)
     }

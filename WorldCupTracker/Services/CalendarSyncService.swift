@@ -11,6 +11,15 @@ final class CalendarSyncService: ObservableObject {
     private let eventStore = EKEventStore()
     private let calendarName = "World Cup 2026"
     
+    var isAuthorized: Bool {
+        let status = EKEventStore.authorizationStatus(for: .event)
+        if #available(macOS 14.0, *) {
+            return status == .authorized || status == .fullAccess
+        } else {
+            return status == .authorized
+        }
+    }
+    
     func syncMatches(_ matches: [Match], teams: [String: Team]) async {
         isSyncing = true
         syncError = nil
@@ -78,6 +87,7 @@ final class CalendarSyncService: ObservableObject {
             // Commit all changes
             try eventStore.commit()
             syncSuccess = true
+            UserDefaults.standard.set(Date(), forKey: "LastCalendarSyncTime")
             
             Task {
                 try? await Task.sleep(nanoseconds: 3_000_000_000)

@@ -17,7 +17,7 @@ struct PopoverContentView: View {
     enum Tab: String, CaseIterable, Identifiable {
         case matches = "Matches"
         case upcoming = "Upcoming"
-        case standings = "Standings"
+        case bracket = "Bracket"   // ✅ replaced standings
 
         var id: String { rawValue }
     }
@@ -171,21 +171,11 @@ struct PopoverContentView: View {
             .frame(maxWidth: .infinity)
             .padding(24)
         } else {
-            if selectedTab == .standings {
-                VStack(alignment: .leading, spacing: 0) {
-                    GroupSelectorView(
-                        groups: groupNames,
-                        selectedGroup: $selectedGroup
-                    )
-                    .padding(.vertical, 4)
-
-                    Divider()
-
-                    ScrollView {
-                        standingsScrollContent
-                            .padding(.vertical, 10)
-                    }
-                }
+            if selectedTab == .bracket {
+                KnockoutBracketView(
+                    matches: matchService.allMatches,
+                    teams: matchService.teams
+                )
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {

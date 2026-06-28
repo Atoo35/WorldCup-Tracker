@@ -24,6 +24,8 @@ struct Match: Decodable, Identifiable {
     let homeScorers: String?
     let awayScorers: String?
 
+    var round: String? { group ?? type }
+    
     let homeTeamLabel: String?
     let awayTeamLabel: String?
 

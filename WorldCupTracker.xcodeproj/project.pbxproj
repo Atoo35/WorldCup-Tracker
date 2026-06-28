@@ -3,25 +3,30 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		5D714C392FDCC674004634CC /* Team.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D714C382FDCC674004634CC /* Team.swift */; };
+		5DA0E4952FF1113600A8EE83 /* KnockoutBracketView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA0E4942FF1112A00A8EE83 /* KnockoutBracketView.swift */; };
+		5DA0E4972FF1115500A8EE83 /* BracketMatchCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA0E4962FF1115000A8EE83 /* BracketMatchCard.swift */; };
+		5DA0E4A92FF12A1900A8EE83 /* Global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA0E4A82FF12A1500A8EE83 /* Global.swift */; };
 		A10000010000000000000001 /* WorldCupTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000001 /* WorldCupTrackerApp.swift */; };
 		A10000010000000000000002 /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000002 /* Match.swift */; };
 		A10000010000000000000003 /* MatchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000003 /* MatchService.swift */; };
 		A10000010000000000000004 /* PopoverContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000004 /* PopoverContentView.swift */; };
 		A10000010000000000000005 /* MatchRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000005 /* MatchRowView.swift */; };
 		A10000010000000000000007 /* MatchDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000010 /* MatchDetailView.swift */; };
-		DB59664CA87B086E9C8D4808 /* CalendarSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB8BD04FB703466DFB0DF4C /* CalendarSyncService.swift */; };
 		A10000010000000000000011 /* CalendarSyncScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000011 /* CalendarSyncScheduler.swift */; };
+		DB59664CA87B086E9C8D4808 /* CalendarSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB8BD04FB703466DFB0DF4C /* CalendarSyncService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		2BB8BD04FB703466DFB0DF4C /* CalendarSyncService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CalendarSyncService.swift; sourceTree = "<group>"; };
-		A10000020000000000000011 /* CalendarSyncScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSyncScheduler.swift; sourceTree = "<group>"; };
 		5D714C382FDCC674004634CC /* Team.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Team.swift; sourceTree = "<group>"; };
+		5DA0E4942FF1112A00A8EE83 /* KnockoutBracketView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnockoutBracketView.swift; sourceTree = "<group>"; };
+		5DA0E4962FF1115000A8EE83 /* BracketMatchCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BracketMatchCard.swift; sourceTree = "<group>"; };
+		5DA0E4A82FF12A1500A8EE83 /* Global.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Global.swift; sourceTree = "<group>"; };
 		A10000020000000000000001 /* WorldCupTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldCupTrackerApp.swift; sourceTree = "<group>"; };
 		A10000020000000000000002 /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Match.swift; sourceTree = "<group>"; };
 		A10000020000000000000003 /* MatchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchService.swift; sourceTree = "<group>"; };
@@ -31,7 +36,12 @@
 		A10000020000000000000007 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A10000020000000000000008 /* WorldCupTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WorldCupTracker.entitlements; sourceTree = "<group>"; };
 		A10000020000000000000010 /* MatchDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchDetailView.swift; sourceTree = "<group>"; };
+		A10000020000000000000011 /* CalendarSyncScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSyncScheduler.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		5DA0E49F2FF1169600A8EE83 /* Bracket */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Bracket; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A10000030000000000000001 /* Frameworks */ = {
@@ -76,6 +86,8 @@
 		A10000040000000000000004 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				5DA0E4A82FF12A1500A8EE83 /* Global.swift */,
+				5DA0E49F2FF1169600A8EE83 /* Bracket */,
 				5D714C382FDCC674004634CC /* Team.swift */,
 				A10000020000000000000002 /* Match.swift */,
 			);
@@ -95,6 +107,8 @@
 		A10000040000000000000006 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				5DA0E4962FF1115000A8EE83 /* BracketMatchCard.swift */,
+				5DA0E4942FF1112A00A8EE83 /* KnockoutBracketView.swift */,
 				A10000020000000000000004 /* PopoverContentView.swift */,
 				A10000020000000000000005 /* MatchRowView.swift */,
 				A10000020000000000000010 /* MatchDetailView.swift */,
@@ -116,6 +130,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5DA0E49F2FF1169600A8EE83 /* Bracket */,
 			);
 			name = WorldCupTracker;
 			productName = WorldCupTracker;
@@ -170,15 +187,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5DA0E4972FF1115500A8EE83 /* BracketMatchCard.swift in Sources */,
 				5D714C392FDCC674004634CC /* Team.swift in Sources */,
 				A10000010000000000000001 /* WorldCupTrackerApp.swift in Sources */,
 				A10000010000000000000002 /* Match.swift in Sources */,
+				5DA0E4952FF1113600A8EE83 /* KnockoutBracketView.swift in Sources */,
 				A10000010000000000000003 /* MatchService.swift in Sources */,
 				A10000010000000000000004 /* PopoverContentView.swift in Sources */,
 				A10000010000000000000005 /* MatchRowView.swift in Sources */,
 				A10000010000000000000007 /* MatchDetailView.swift in Sources */,
 				DB59664CA87B086E9C8D4808 /* CalendarSyncService.swift in Sources */,
 				A10000010000000000000011 /* CalendarSyncScheduler.swift in Sources */,
+				5DA0E4A92FF12A1900A8EE83 /* Global.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

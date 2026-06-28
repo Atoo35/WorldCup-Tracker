@@ -31,7 +31,7 @@ final class BracketBuilder {
 
             r16Nodes.append(
                 BracketNode(
-                    id: match.id ?? UUID().uuidString,
+                    id: match.id,
                     match: match,
                     round: .r16,
                     column: 1,
@@ -51,7 +51,7 @@ final class BracketBuilder {
 
             qfNodes.append(
                 BracketNode(
-                    id: match.id ?? UUID().uuidString,
+                    id: match.id,
                     match: match,
                     round: .qf,
                     column: 2,
@@ -71,7 +71,7 @@ final class BracketBuilder {
 
             sfNodes.append(
                 BracketNode(
-                    id: match.id ?? UUID().uuidString,
+                    id: match.id,
                     match: match,
                     round: .sf,
                     column: 3,
@@ -91,7 +91,7 @@ final class BracketBuilder {
 
             fNodes.append(
                 BracketNode(
-                    id: match.id ?? UUID().uuidString,
+                    id: match.id,
                     match: match,
                     round: .final,
                     column: 4,
@@ -112,7 +112,7 @@ final class BracketBuilder {
 
     private static func node(from match: Match) -> BracketNode {
         BracketNode(
-            id: match.id ?? UUID().uuidString,
+            id: match.id,
             match: match,
             round: KnockoutRound(rawValue: match.type ?? "") ?? .r32,
             column: column(for: match.type),

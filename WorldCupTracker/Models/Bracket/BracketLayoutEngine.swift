@@ -23,7 +23,6 @@ final class BracketLayoutEngine {
         // MARK: build upwards
         for col in 1..<columns.count {
 
-            let prev = columns[col - 1]
             let curr = columns[col]
 
             for node in curr {

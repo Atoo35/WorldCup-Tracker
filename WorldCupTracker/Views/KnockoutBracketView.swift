@@ -10,6 +10,8 @@ struct KnockoutBracketView: View {
 
     @State private var contentSize: CGSize = .zero
     @State private var originOffset: CGPoint = .zero
+    
+    private let cardSize = CGSize(width: 180, height: 70)
 
     var body: some View {
 
@@ -127,12 +129,21 @@ struct KnockoutBracketView: View {
     ) {
         var path = Path()
 
-        let midX = (child.x + parent.x) / 2
+        let cardWidth = cardSize.width
+        let inset: CGFloat = cardWidth / 2
 
-        path.move(to: child)
+        // Determine direction
+        let goingRight = child.x < parent.x
+
+        let startX = child.x + (goingRight ? inset : -inset)
+        let endX   = parent.x - (goingRight ? inset : -inset)
+
+        let midX = (startX + endX) / 2
+
+        path.move(to: CGPoint(x: startX, y: child.y))
         path.addLine(to: CGPoint(x: midX, y: child.y))
         path.addLine(to: CGPoint(x: midX, y: parent.y))
-        path.addLine(to: parent)
+        path.addLine(to: CGPoint(x: endX, y: parent.y))
 
         context.stroke(
             path,

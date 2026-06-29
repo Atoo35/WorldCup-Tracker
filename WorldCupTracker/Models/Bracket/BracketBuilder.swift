@@ -8,140 +8,118 @@ final class BracketBuilder {
             ($0.type ?? "").uppercased()
         }
 
-        let r32 = (grouped["R32"] ?? []).sorted {
-            (Int($0.id) ?? 0) < (Int($1.id) ?? 0)
+        let r32 = (grouped["R32"] ?? []).sorted { (Int($0.id) ?? 0) < (Int($1.id) ?? 0) }
+        let r16 = (grouped["R16"] ?? []).sorted { (Int($0.id) ?? 0) < (Int($1.id) ?? 0) }
+        let qf  = (grouped["QF"]  ?? []).sorted { (Int($0.id) ?? 0) < (Int($1.id) ?? 0) }
+        let sf  = (grouped["SF"]  ?? []).sorted { (Int($0.id) ?? 0) < (Int($1.id) ?? 0) }
+        let f   = (grouped["FINAL"] ?? grouped["F"] ?? []).sorted { (Int($0.id) ?? 0) < (Int($1.id) ?? 0) }
+
+        var r32Nodes = buildRound(r32, round: .r32,   column: 0)
+        var r16Nodes = buildRound(r16, round: .r16,   column: 1)
+        var qfNodes  = buildRound(qf,  round: .qf,    column: 2)
+        var sfNodes  = buildRound(sf,  round: .sf,    column: 3)
+        var fNodes   = buildRound(f,   round: .final, column: 4)
+
+        // MARK: - Reorder every round to match the actual bracket tree
+
+        // Sorting by `id` only tells us *which* matches exist in a round —
+        // it says nothing about visual top-to-bottom order. The real order
+        // is defined by the tree itself: walking down from the Final,
+        // visiting left child before right child, puts every pair of
+        // matches that feed the same parent next to each other. We use
+        // that walk to reorder every column, instead of trusting `id` sort
+        // past the point of grouping matches into rounds.
+
+        let allNodes = r32Nodes + r16Nodes + qfNodes + sfNodes + fNodes
+        let nodesByID = Dictionary(uniqueKeysWithValues: allNodes.map { ($0.id, $0) })
+
+        let roots: [BracketNode] =
+            !fNodes.isEmpty   ? fNodes   :
+            !sfNodes.isEmpty  ? sfNodes  :
+            !qfNodes.isEmpty  ? qfNodes  :
+            !r16Nodes.isEmpty ? r16Nodes :
+            r32Nodes
+
+        let visitOrder = treeVisitOrder(roots: roots, nodesByID: nodesByID)
+
+        func reorder(_ nodes: [BracketNode]) -> [BracketNode] {
+            nodes.sorted {
+                (visitOrder[$0.id] ?? Int.max) < (visitOrder[$1.id] ?? Int.max)
+            }
         }
 
-        let r16 = (grouped["R16"] ?? []).sorted {
-            (Int($0.id) ?? 0) < (Int($1.id) ?? 0)
-        }
+        r32Nodes = reorder(r32Nodes)
+        r16Nodes = reorder(r16Nodes)
+        qfNodes  = reorder(qfNodes)
+        sfNodes  = reorder(sfNodes)
+        fNodes   = reorder(fNodes)
 
-        let qf = (grouped["QF"] ?? []).sorted {
-            (Int($0.id) ?? 0) < (Int($1.id) ?? 0)
-        }
-
-        let sf = (grouped["SF"] ?? []).sorted {
-            (Int($0.id) ?? 0) < (Int($1.id) ?? 0)
-        }
-
-        let f = (grouped["FINAL"] ?? grouped["F"] ?? []).sorted {
-            (Int($0.id) ?? 0) < (Int($1.id) ?? 0)
-        }
-
-        let r32Nodes = r32.map(node)
-
-        var r16Nodes: [BracketNode] = []
-        var qfNodes: [BracketNode] = []
-        var sfNodes: [BracketNode] = []
-        var fNodes: [BracketNode] = []
-
-        // MARK: R16 links to R32
-        for i in 0..<r16.count {
-
-            let left = i * 2 < r32Nodes.count ? r32Nodes[i * 2].id : nil
-            let right = i * 2 + 1 < r32Nodes.count ? r32Nodes[i * 2 + 1].id : nil
-
-            let match = r16[i]
-
-            r16Nodes.append(
-                BracketNode(
-                    id: match.id,
-                    match: match,
-                    round: .r16,
-                    column: 1,
-                    leftChildID: left,
-                    rightChildID: right
-                )
-            )
-        }
-
-        // MARK: QF links to R16
-        for i in 0..<qf.count {
-
-            let left = i * 2 < r16Nodes.count ? r16Nodes[i * 2].id : nil
-            let right = i * 2 + 1 < r16Nodes.count ? r16Nodes[i * 2 + 1].id : nil
-
-            let match = qf[i]
-
-            qfNodes.append(
-                BracketNode(
-                    id: match.id,
-                    match: match,
-                    round: .qf,
-                    column: 2,
-                    leftChildID: left,
-                    rightChildID: right
-                )
-            )
-        }
-
-        // MARK: SF links to QF
-        for i in 0..<sf.count {
-
-            let left = i * 2 < qfNodes.count ? qfNodes[i * 2].id : nil
-            let right = i * 2 + 1 < qfNodes.count ? qfNodes[i * 2 + 1].id : nil
-
-            let match = sf[i]
-
-            sfNodes.append(
-                BracketNode(
-                    id: match.id,
-                    match: match,
-                    round: .sf,
-                    column: 3,
-                    leftChildID: left,
-                    rightChildID: right
-                )
-            )
-        }
-
-        // MARK: FINAL links to SF
-        for i in 0..<f.count {
-
-            let left = i * 2 < sfNodes.count ? sfNodes[i * 2].id : nil
-            let right = i * 2 + 1 < sfNodes.count ? sfNodes[i * 2 + 1].id : nil
-
-            let match = f[i]
-
-            fNodes.append(
-                BracketNode(
-                    id: match.id,
-                    match: match,
-                    round: .final,
-                    column: 4,
-                    leftChildID: left,
-                    rightChildID: right
-                )
-            )
-        }
-
-        return [
-            r32Nodes,
-            r16Nodes,
-            qfNodes,
-            sfNodes,
-            fNodes
-        ]
+        return [r32Nodes, r16Nodes, qfNodes, sfNodes, fNodes]
     }
 
-    private static func node(from match: Match) -> BracketNode {
-        BracketNode(
-            id: match.id,
-            match: match,
-            round: KnockoutRound(rawValue: match.type ?? "") ?? .r32,
-            column: column(for: match.type),
-            leftChildID: nil,
-            rightChildID: nil
-        )
+    // MARK: - Round builder
+
+    private static func buildRound(
+        _ matches: [Match],
+        round: KnockoutRound,
+        column: Int
+    ) -> [BracketNode] {
+        matches.map { match in
+            BracketNode(
+                id: match.id,
+                match: match,
+                round: round,
+                column: column,
+                leftChildID: referencedMatchID(from: match.homeTeamLabel),
+                rightChildID: referencedMatchID(from: match.awayTeamLabel)
+            )
+        }
     }
 
-    private static func column(for type: String?) -> Int {
-        switch type?.lowercased() {
-        case "r32": return 0
-        case "r16": return 1
-        case "qf": return 2
-        case "sf": return 3
-        default: return 4
+    /// Parses strings like "Winner Match 86" -> "86".
+    /// Returns nil for labels with no match reference (e.g. "Winner Group J")
+    /// — those nodes correctly stay leaves.
+    private static func referencedMatchID(from label: String?) -> String? {
+        guard let label = label else { return nil }
+        guard let range = label.range(of: #"Match\s+(\d+)"#, options: .regularExpression) else {
+            return nil
         }
+        let digits = label[range].filter(\.isNumber)
+        return digits.isEmpty ? nil : digits
+    }
+
+    // MARK: - Tree traversal ordering
+
+    /// Walks the bracket from the deepest available round (normally the
+    /// Final) down to the leaves, visiting the left child before the right
+    /// child at every node. Because siblings in the tree are visited
+    /// consecutively, this produces the correct top-to-bottom visual order
+    /// for *every* round — not just the leaves.
+    private static func treeVisitOrder(
+        roots: [BracketNode],
+        nodesByID: [String: BracketNode]
+    ) -> [String: Int] {
+
+        var order: [String: Int] = [:]
+        var sequence = 0
+
+        func visit(_ node: BracketNode) {
+            guard order[node.id] == nil else { return } // guard against cycles/dupes
+            order[node.id] = sequence
+            sequence += 1
+
+            if let leftID = node.leftChildID, let left = nodesByID[leftID] {
+                visit(left)
+            }
+            if let rightID = node.rightChildID, let right = nodesByID[rightID] {
+                visit(right)
+            }
+        }
+
+        for root in roots {
+            visit(root)
+        }
+
+        return order
     }
 }

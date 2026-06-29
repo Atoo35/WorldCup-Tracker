@@ -13,7 +13,7 @@ jobs:
     runs-on: macos-latest
 
     env:
-      SCHEME: YourSchemeName
+      SCHEME: WorldCupTracker
 
     steps:
       - uses: actions/checkout@v4

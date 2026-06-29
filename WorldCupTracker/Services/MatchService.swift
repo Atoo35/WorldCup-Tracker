@@ -35,7 +35,6 @@ final class MatchService: ObservableObject {
         Task {
             await fetchTeams()
             await fetchMatches()
-            await fetchGroups()
         }
         startAutoRefresh()
     }
@@ -45,7 +44,6 @@ final class MatchService: ObservableObject {
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 await self?.fetchMatches()
-                await self?.fetchGroups()
             }
         }
         if let timer = refreshTimer {
@@ -138,40 +136,6 @@ final class MatchService: ObservableObject {
 
         upcomingMatches = matches.filter(\.isUpcoming)
             .sorted { ($0.kickoffDate ?? .distantFuture) < ($1.kickoffDate ?? .distantFuture) }
-    }
-
-    // MARK: - Groups Standings
-
-    func fetchGroups() async {
-        do {
-            let (data, response) = try await URLSession.shared.data(from: Self.groupsURL)
-            guard let http = response as? HTTPURLResponse,
-                  http.statusCode == 200 else {
-                return
-            }
-            let decoded = try JSONDecoder().decode(GroupsResponse.self, from: data)
-            
-            let sortedGroups = decoded.groups.map { group -> Group in
-                var groupCopy = group
-                groupCopy.teams.sort { t1, t2 in
-                    if t1.ptsInt != t2.ptsInt {
-                        return t1.ptsInt > t2.ptsInt
-                    }
-                    if t1.gdInt != t2.gdInt {
-                        return t1.gdInt > t2.gdInt
-                    }
-                    if t1.gfInt != t2.gfInt {
-                        return t1.gfInt > t2.gfInt
-                    }
-                    return t1.team_id < t2.team_id
-                }
-                return groupCopy
-            }.sorted { $0.name < $1.name }
-            
-            self.groups = sortedGroups
-        } catch {
-            print("Group fetch error:", error)
-        }
     }
 }
 

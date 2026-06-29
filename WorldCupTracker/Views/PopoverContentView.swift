@@ -17,7 +17,7 @@ struct PopoverContentView: View {
     enum Tab: String, CaseIterable, Identifiable {
         case matches = "Matches"
         case upcoming = "Upcoming"
-        case bracket = "Bracket"   // ✅ replaced standings
+        case bracket = "Bracket"
 
         var id: String { rawValue }
     }
@@ -164,7 +164,6 @@ struct PopoverContentView: View {
                 Button("Retry") {
                     Task { 
                         await matchService.fetchMatches() 
-                        await matchService.fetchGroups()
                     }
                 }
             }
@@ -310,73 +309,6 @@ struct PopoverContentView: View {
             return ["All", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
         } else {
             return ["All"] + matchService.groups.map(\.name).sorted()
-        }
-    }
-
-    @ViewBuilder
-    private var standingsScrollContent: some View {
-        if matchService.groups.isEmpty {
-            VStack(spacing: 8) {
-                ProgressView()
-                Text("Loading standings...")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.vertical, 40)
-        } else {
-            if selectedGroup == "All" {
-                ForEach(matchService.groups) { group in
-                    GroupTableView(group: group, teams: matchService.teams)
-                        .padding(.bottom, 12)
-                }
-            } else {
-                if let group = matchService.groups.first(where: { $0.name == selectedGroup }) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        GroupTableView(group: group, teams: matchService.teams)
-                        
-                        let groupedMatches = groupedMatches(for: selectedGroup)
-
-                        if !groupedMatches.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Group \(selectedGroup) Matches")
-                                    .font(.system(.caption, design: .rounded).weight(.bold))
-                                    .foregroundStyle(.secondary)
-                                    .padding(.horizontal, 14)
-                                    .padding(.top, 4)
-
-                                ForEach(groupedMatches, id: \.0) { dateStr, matches in
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        Text(dateStr)
-                                            .font(.system(.caption2, design: .rounded).weight(.semibold))
-                                            .foregroundStyle(.tertiary)
-                                            .padding(.horizontal, 14)
-
-                                        ForEach(matches) { match in
-                                            MatchRowView(
-                                                match: match,
-                                                teams: matchService.teams,
-                                                onTap: {
-                                                    selectedMatch = match
-                                                    withAnimation(
-                                                        .spring(
-                                                            response: 0.35,
-                                                            dampingFraction: 0.82
-                                                        )
-                                                    ) {
-                                                        showingDetail = true
-                                                    }
-                                                }
-                                            )
-                                            .padding(.horizontal, 12)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 

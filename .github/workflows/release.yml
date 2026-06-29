@@ -1,0 +1,38 @@
+name: Build macOS App
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    env:
+      SCHEME: YourSchemeName
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Zip
+        run: |
+          cd build/Build/Products/Release
+          zip -r ../../../../${{ env.SCHEME }}.zip *.app
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ env.SCHEME }}.zip

@@ -1,1 +1,1 @@
-- testing the release notes
+- Removed round of 32 matches from the brackets view

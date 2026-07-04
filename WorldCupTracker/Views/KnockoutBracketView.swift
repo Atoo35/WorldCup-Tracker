@@ -159,10 +159,9 @@ struct KnockoutBracketView: View {
 
     private func roundTitle(for index: Int) -> String {
         switch index {
-        case 0: return "Round of 32"
-        case 1: return "Round of 16"
-        case 2: return "Quarter Finals"
-        case 3: return "Semi Finals"
+        case 0: return "Round of 16"
+        case 1: return "Quarter Finals"
+        case 2: return "Semi Finals"
         default: return "Final"
         }
     }

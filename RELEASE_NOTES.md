@@ -1,1 +1,1 @@
-- Removed round of 32 matches from the brackets view
+- Removed Round of 16 from the bracket

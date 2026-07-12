@@ -7,12 +7,9 @@ final class BracketBuilder {
         let grouped = Dictionary(grouping: matches) {
             ($0.type ?? "").uppercased()
         }
-
-        let qf  = (grouped["QF"]  ?? []).sorted { (Int($0.id) ?? 0) < (Int($1.id) ?? 0) }
         let sf  = (grouped["SF"]  ?? []).sorted { (Int($0.id) ?? 0) < (Int($1.id) ?? 0) }
         let f   = (grouped["FINAL"] ?? grouped["F"] ?? []).sorted { (Int($0.id) ?? 0) < (Int($1.id) ?? 0) }
 
-        var qfNodes  = buildRound(qf,  round: .qf,    column: 2)
         var sfNodes  = buildRound(sf,  round: .sf,    column: 3)
         var fNodes   = buildRound(f,   round: .final, column: 4)
 
@@ -26,12 +23,11 @@ final class BracketBuilder {
         // that walk to reorder every column, instead of trusting `id` sort
         // past the point of grouping matches into rounds.
 
-        let allNodes = qfNodes + sfNodes + fNodes
+        let allNodes = sfNodes + fNodes
         let nodesByID = Dictionary(uniqueKeysWithValues: allNodes.map { ($0.id, $0) })
 
         let roots: [BracketNode] =
-            !fNodes.isEmpty   ? fNodes   :
-            !sfNodes.isEmpty  ? sfNodes  : qfNodes
+            !fNodes.isEmpty   ? fNodes   : sfNodes
 
         let visitOrder = treeVisitOrder(roots: roots, nodesByID: nodesByID)
 
@@ -41,11 +37,10 @@ final class BracketBuilder {
             }
         }
 
-        qfNodes  = reorder(qfNodes)
         sfNodes  = reorder(sfNodes)
         fNodes   = reorder(fNodes)
 
-        return [ qfNodes, sfNodes, fNodes]
+        return [ sfNodes, fNodes]
     }
 
     // MARK: - Round builder

@@ -1,1 +1,1 @@
-- Removed Round of 16 from the bracket
+- Removed Quarter-Final nodes
